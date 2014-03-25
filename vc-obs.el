@@ -43,7 +43,7 @@
                (name (file-relative-name file dir))
                (str (ignore-errors
                       (cd dir)
-                      (vc-obs--out-ok "status" "--" name)
+                      (vc-obs--out-ok "status" "-v" "--" name)
                       (buffer-string))))
           (and str
                (> (length str) (length name))
@@ -55,7 +55,7 @@
 (defun vc-obs-state (file)
   "Obs-specific version of `vc-state'."
   (let* ((status (vc-obs--run-command-string
-                  file "status" "--"))
+                  file "status" "-v" "--"))
          (status-letter (and status
                              (substring status 0 1))))
     (if status-letter
@@ -134,7 +134,7 @@ FILE can be nil."
 (defun vc-obs--state-code (code)
   "Convert from a string to a added/deleted/modified state."
   (pcase (string-to-char code)
-    (?\x20  no-modifications)
+    (?\x32 'up-to-date)
     (?A 'added)
     (?C 'conflicted)
     (?D 'deleted)
