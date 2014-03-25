@@ -90,11 +90,11 @@ NOTE: FILES are ignored, pre-assumed only one changelog file
 TODO this is a very crude re-implementation of /usr/lib/build/vc. "
   (let* ((dir (vc-obs-root (buffer-file-name)))
          (changelog-file (car (file-expand-wildcards "*.changes" t)))
-         (require 'ob)                  ;bad practice, but we don't have the standard string library
-         (date-str (org-babel-chomp (with-output-to-string
-                                      (with-current-buffer standard-output
-                                        (apply 'call-process "env" nil '(t nil) nil
-                                               '("LC_ALL=POSIX" "TZ=UTC" "date"))))))
+         (require 's)
+         (date-str (s-chomp (with-output-to-string
+                              (with-current-buffer standard-output
+                                (apply 'call-process "env" nil '(t nil) nil
+                                       '("LC_ALL=POSIX" "TZ=UTC" "date"))))))
          (header-separator "-------------------------------------------------------------------")
          (mailaddr "cxiong@suse.com"))
     (find-file changelog-file)
