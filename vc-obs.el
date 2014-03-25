@@ -1,10 +1,19 @@
 ;;; VC Backend for OBS(Open Build Service)
+;;; By Carl Xiong (xiongc05@gmail.com)
+;;;
+;;; GPL v3+
+;;; 
+;;; TODO read meta data about a obs repo, set the api interface accordingly
+;;; TODO Info/Geturl Page
+;;; TODO Satus page 
 
 (eval-when-compile
   (require 'cl-lib)
   (require 'vc)
   (require 'vc-dir)
   (require 'grep))
+
+(require 's)
 
 ;; Clear up the cache to force vc-call to check again and discover
 ;; new functions when we reload this file. Also see `vc-obs-reload'
@@ -87,23 +96,41 @@ capacity."
 
 NOTE: FILES are ignored, pre-assumed only one changelog file
 
-TODO this is a very crude re-implementation of /usr/lib/build/vc. "
+TODO Read mail address from other source "
   (let* ((dir (vc-obs-root (buffer-file-name)))
-         (changelog-file (car (file-expand-wildcards "*.changes" t)))
-         (require 's)
-         (date-str (s-chomp (with-output-to-string
-                              (with-current-buffer standard-output
-                                (apply 'call-process "env" nil '(t nil) nil
-                                       '("LC_ALL=POSIX" "TZ=UTC" "date"))))))
+         (changelog-file (let ((default-directory dir))
+                           ;; only one file *.changes should be registered this
+                           ;; complexity is needed s.t. some temp files will not
+                           ;; confuse this function
+                           (mapconcat (lambda (f)
+                                        (if (vc-obs-registered f)
+                                            f
+                                          ""))
+                                      (file-expand-wildcards "*.changes" t) "")))
+         (date-str)
          (header-separator "-------------------------------------------------------------------")
-         (mailaddr "cxiong@suse.com"))
-    (find-file changelog-file)
-    (beginning-of-buffer)
-    (insert header-separator "\n"
-            (format "%s - %s" date-str mailaddr) "\n" "\n"
-            "- ")
-    (save-excursion
-      (insert "\n\n"))))
+         (mailaddr "cxiong@suse.com")
+         (changelog-buffer (find-file-noselect changelog-file)))
+    (if (and changelog-buffer
+             (buffer-modified-p changelog-buffer))
+        ;; user is in the middle of editing changelog, only switch to it
+        (progn
+          (switch-to-buffer changelog-buffer)
+          (message "Continue editing changelog...."))
+      ;; insert new entry to changelog
+      (setq date-str (s-chomp (with-output-to-string
+                                (with-current-buffer standard-output
+                                  (apply 'call-process "env" nil '(t nil) nil
+                                         '("LC_ALL=POSIX" "TZ=UTC" "date"))))))
+      (with-current-buffer changelog-buffer
+        (beginning-of-buffer)
+        (insert header-separator "\n"
+                (format "%s - %s" date-str mailaddr) "\n" "\n"
+                "- ")
+        (save-excursion
+          (insert "\n\n")))
+      (switch-to-buffer changelog-buffer)
+      (message "Add a new entry to changelog..."))))
 
 (defun vc-obs--call (buffer command &rest args)
   ;; We don't need to care the arguments.  If there is a file name, it
