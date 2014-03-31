@@ -91,6 +91,57 @@ capacity."
 (defun vc-obs-workfile-unchanged-p (file)
   (eq 'up-to-date (vc-obs-state file)))
 
+(defvar obs~view-link-map nil
+  "A map of some number->url so we can jump to url by number.")
+
+(defun obs-link-go-to-numbered (num)
+  "Go to a numbered url."
+  (interactive "n[OBS] Visit url with number: ")
+  (let ((url (gethash num obs~view-link-map)))
+    (unless url
+      (warn "Invalid number for URL"))
+    (funcall #'browse-url url)))
+
+(defun vc-obs-dir-extra-headers (_dir)
+  "Display Backend specific headers for a repo. A stub for now."
+  ;; Package, Linked Package, Pages.
+  (define-key vc-dir-mode-map (kbd "g") #'obs-link-go-to-numbered)
+  (make-local-variable 'obs~view-link-map)
+  (setq obs~view-link-map (make-hash-table :size 8))
+  (puthash 1 "http://nowhere" obs~view-link-map)
+
+  (concat (propertize "Package     : " 'face 'font-lock-type-face)
+          (propertize "Baidu"
+                      'face 'font-lock-variable-name-face)
+          (propertize "[1]"
+                      'face 'link
+                      'mouse-face 'highlight)))
+
+(defun vc-obs-dir-status (_dir update-function)
+  "Call UPDATE-FUNCTION on a list of (FILE STATE EXTRA) entries
+  for DIR."
+  (apply update-function
+         (list (let (entries
+                     entry
+                     line)
+                 (with-temp-buffer
+                   (vc-obs-command (current-buffer) nil nil
+                                   "status")
+                   (goto-char (point-min))
+                   (while (not (zerop (length
+                                       (setq line
+                                             (buffer-substring (point)
+                                                               (line-end-position))))))
+                     (forward-line 1)
+                     (let* ((line-tokens (split-string line))
+                            (filename (cadr line-tokens))
+                            (state-letter (car line-tokens)))
+                       (setq entry (list filename
+                                         (format "%s (%s)" state-letter (vc-obs--state-code state-letter))
+                                         "")))
+                     (add-to-list 'entries entry)))
+                 entries))))
+
 (defun vc-obs-update-changelog (files)
   "Obs specific implementation of update changelog.
 
