@@ -255,19 +255,19 @@ The difference to vc-do-command is that this function always invokes
 
 ;;; OBS specific commands
 (defun vc-obs-linkdiff (&optional rev1 rev2 buffer)
-  "run 'osc linkdiff', almost the same as `vc-obs-diff' but there
-is no file set, linkdiff is always done with respect to working directory."
+  "run 'osc linkdiff', by temporarily redefining `vc-obs-diff'."
   (interactive)
   (let ((default-directory (vc-obs-root default-directory))
         process-file-side-effects
-        vc-obs-diff)
-    
+        (old-vc-obs-diff-def (symbol-function 'vc-obs-diff)))
     (if default-directory
-        (progn (fset 'vc-obs-diff
-                     (lambda (files &optional rev1 rev2 buffer)
-                       (apply #'vc-obs-command (or buffer "*vc-diff*") 1 nil
-                              '("linkdiff"))))
-               (vc-diff))
+        (progn
+          (fset 'vc-obs-diff
+                (lambda (files &optional rev1 rev2 buffer)
+                  (apply #'vc-obs-command (or buffer "*vc-diff*") 1 nil
+                         '("linkdiff"))))
+          (vc-diff)
+          (fset 'vc-obs-diff old-vc-obs-diff-def))
       (error "Not in an OBS working directory or managed file."))))
 
 ;;; Extra helper commands
