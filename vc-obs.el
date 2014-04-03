@@ -221,7 +221,7 @@ FILE can be nil."
 (defun vc-obs--state-code (code)
   "Convert from a string to a added/deleted/modified state."
   (pcase (string-to-char code)
-    (?\x32 'up-to-date)
+    (32 'up-to-date)
     (?A 'added)
     (?C 'conflicted)
     (?D 'deleted)
@@ -252,6 +252,23 @@ The difference to vc-do-command is that this function always invokes
 `vc-obs-program'."
   (apply 'vc-do-command (or buffer "*vc*") okstatus vc-obs-program
          file-or-list flags))
+
+;;; OBS specific commands
+(defun vc-obs-linkdiff (&optional rev1 rev2 buffer)
+  "run 'osc linkdiff', almost the same as `vc-obs-diff' but there
+is no file set, linkdiff is always done with respect to working directory."
+  (interactive)
+  (let ((default-directory (vc-obs-root default-directory))
+        process-file-side-effects
+        vc-obs-diff)
+    
+    (if default-directory
+        (progn (fset 'vc-obs-diff
+                     (lambda (files &optional rev1 rev2 buffer)
+                       (apply #'vc-obs-command (or buffer "*vc-diff*") 1 nil
+                              '("linkdiff"))))
+               (vc-diff))
+      (error "Not in an OBS working directory or managed file."))))
 
 ;;; Extra helper commands
 (defun vc-obs-reload ()
