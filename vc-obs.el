@@ -45,7 +45,8 @@
 ;;; BACKEND PROPERTIES
 (defun vc-obs-registered (file)
   "Check whether FILE is registered with obs."
-  (let ((dir (vc-obs-root file)))
+  (let ((dir (vc-obs-root file))
+        is-registered)
     (when dir
       (with-temp-buffer
         (let* (process-file-side-effects
@@ -54,10 +55,18 @@
                       (cd dir)
                       (vc-obs--out-ok "status" "-v" "--" name)
                       (buffer-string))))
-          (and str
-               (> (length str) (length name))
-               (not (string= (substring str 0 1)
-                             "?"))))))))
+          (setq is-registered
+                (and str
+                     (> (length str) (length name))
+                     (not (string= (substring str 0 1)
+                                   "?"))))))
+      ;; OBS is mainly for packaging, so we constantly need to work with
+      ;; patches. However, in `vc-deduce-backend', `diff-mode' is considered
+      ;; ONLY for the change set. So here we work around it by setting
+      ;; `diff-vc-backend' manually for all registered patches.
+      (if (and is-registered (derived-mode-p 'diff-mode))
+          (set (make-local-variable 'diff-vc-backend) 'OBS)))
+    is-registered))
 
 (defalias 'vc-obs-responsible-p 'vc-obs-root)
 
