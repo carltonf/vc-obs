@@ -25,8 +25,8 @@
   :version "24.1"
   :group 'vc)
 
-(defcustom vc-obs-program "osc"
-  "Name of the osc executable (excluding any arguments)."
+(defcustom vc-obs-program "/usr/bin/osc"
+  "Please set the value to the path of osc executable."
   :version "24.1"
   :type 'string
   :group 'vc-obs)
@@ -198,7 +198,7 @@ TODO Read mail address from other source "
   ;; directories.  We enable `inhibit-null-byte-detection', otherwise
   ;; Tramp's eol conversion might be confused.
   (let ((inhibit-null-byte-detection t)
-	(process-environment (cons "PAGER=" process-environment)))
+	process-environment)
     (apply 'process-file vc-obs-program nil buffer nil command args)))
 
 (defun vc-obs--out-ok (command &rest args)
