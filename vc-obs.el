@@ -25,7 +25,7 @@
   :version "24.1"
   :group 'vc)
 
-(defcustom vc-obs-program "/usr/bin/osc"
+(defcustom vc-obs-program "osc"
   "Please set the value to the path of osc executable."
   :version "24.1"
   :type 'string
@@ -157,7 +157,7 @@ capacity."
 NOTE: FILES are ignored, pre-assumed only one changelog file
 
 TODO Read mail address from other source "
-  (let* ((dir (vc-obs-root (buffer-file-name)))
+  (let* ((dir default-directory)
          (changelog-file (let ((default-directory dir))
                            ;; only one file *.changes should be registered this
                            ;; complexity is needed s.t. some temp files will not
