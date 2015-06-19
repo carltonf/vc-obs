@@ -1,0 +1,5 @@
+(:name vc-obs
+       :description "VC backend for OBS project."
+       :type git
+       :url "https://github.com/carltonf/vc-obs"
+       :pkgname "vc-obs")
