@@ -199,7 +199,7 @@ TODO Read mail address from other source "
   ;; Tramp's eol conversion might be confused.
   (let ((inhibit-null-byte-detection t)
 	process-environment)
-    (apply 'process-file vc-obs-program nil buffer nil command args)))
+    (apply 'process-file "/usr/bin/python2" nil buffer nil vc-obs-program (cons command args))))
 
 (defun vc-obs--out-ok (command &rest args)
   (zerop (apply 'vc-obs--call '(t nil) command args)))
