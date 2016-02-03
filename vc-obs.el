@@ -31,6 +31,12 @@
   :type 'string
   :group 'vc-obs)
 
+(defcustom vc-obs-author-mail nil
+  "The mail address of the author for changelog update."
+  :version "24.1"
+  :type 'string
+  :group 'vc-obs)
+
 (defvar vc-obs-commits-coding-system 'utf-8
   "Default coding system for obs commits.")
 
@@ -155,9 +161,10 @@ capacity."
   "Obs specific implementation of update changelog.
 
 NOTE: FILES are ignored, pre-assumed only one changelog file
-
-TODO Read mail address from other source "
+"
   (let* ((dir default-directory)
+         (mailaddr (or vc-obs-author-mail
+                       (error "VC-OBS: author mail address must be set.")))
          (changelog-file (let ((default-directory dir))
                            ;; only one file *.changes should be registered this
                            ;; complexity is needed s.t. some temp files will not
@@ -168,8 +175,7 @@ TODO Read mail address from other source "
                                           ""))
                                       (file-expand-wildcards "*.changes" t) "")))
          (date-str)
-         (header-separator "-------------------------------------------------------------------")
-         (mailaddr "cxiong@suse.com")
+         (header-separator "-------------------------------------------------------------------") 
          (changelog-buffer (find-file-noselect changelog-file)))
     (if (and changelog-buffer
              (buffer-modified-p changelog-buffer))
